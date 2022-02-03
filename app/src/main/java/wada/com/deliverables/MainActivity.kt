@@ -3,6 +3,7 @@ package wada.com.deliverables
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -13,6 +14,8 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
+import androidx.room.Room
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
 import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener
@@ -21,6 +24,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
+import kotlinx.coroutines.*
 
 
 class MainActivity : AppCompatActivity()
@@ -29,9 +33,18 @@ class MainActivity : AppCompatActivity()
     ,OnMyLocationButtonClickListener
     ,OnMyLocationClickListener {
     private var Check = checkString()
+    private lateinit var db:MemoryDatabase
+    private lateinit var dao:MemoryDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        this.db = Room.databaseBuilder(
+            applicationContext,
+            MemoryDatabase::class.java,
+            "Memory.db"
+        ).build()
+        this.dao=this.db.MemoryDao()
+
         setContentView(R.layout.activity_permissionunauthorized)
         if(checkPermission()) {
             setContentView(R.layout.activity_main)
@@ -40,6 +53,7 @@ class MainActivity : AppCompatActivity()
             mapFragment.getMapAsync(this)
 
         }
+
     }
     override fun onStart() {
         super.onStart()
@@ -61,6 +75,7 @@ class MainActivity : AppCompatActivity()
 
 
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun showDialog() {
         //debug
         Toast.makeText(applicationContext, "セーブボタン押されたぞ", Toast.LENGTH_LONG).show()
@@ -79,6 +94,17 @@ class MainActivity : AppCompatActivity()
             //不正な入力チェック
             if (Check.canDataIn(titleEditText.text.toString(), contentsEditText.text.toString())) {
                 //TODO DBに挿入
+                    //テスト
+                GlobalScope.launch {
+                    withContext(Dispatchers.IO){
+                        val memory=Memory(id=0,"テストタイトル","テスト内容",35.326 , 37.5643,"2月４日")
+                        dao.insert(memory)
+                    }
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(applicationContext,"正常！",Toast.LENGTH_LONG).show()
+                    }
+                }
+
             } else {
                 Toast.makeText(this, "値が不正です。入力しなおしてください。", Toast.LENGTH_SHORT)
                     .show()
