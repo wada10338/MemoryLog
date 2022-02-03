@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Deliverables</string>
+    <string name="No_Permission">permission許可してくれ。</string>
+    <string name="MemoryList">一覧</string>
+    <string name="Save">保存</string>
 </resources>
