@@ -2,35 +2,34 @@ package wada.com.deliverables
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Camera
 import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
 import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
+
 
 class MainActivity : AppCompatActivity()
     ,OnMapReadyCallback
     ,GoogleMap.OnPoiClickListener
     ,OnMyLocationButtonClickListener
     ,OnMyLocationClickListener {
+    private var Check = checkString()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_permissionunauthorized)
@@ -41,20 +40,55 @@ class MainActivity : AppCompatActivity()
             mapFragment.getMapAsync(this)
 
         }
-        var listAc=findViewById<Button>(R.id.MemoryListButton)
-        val intent=Intent(this,ListActivity::class.java)
-        listAc.setOnClickListener { startActivity(intent) }
-
     }
-
     override fun onStart() {
         super.onStart()
+        //ListActivityへの移行ボタン
+        val listAc=findViewById<Button>(R.id.MemoryListButton)
+        val intent=Intent(this,ListActivity::class.java)
+        listAc.setOnClickListener { startActivity(intent) }
+        //保存ボタン（ダイアログ表示ボタン）
+        val saveButton=findViewById<Button>(R.id.MemorySaveButton)
+        saveButton.setOnClickListener { showDialog() }
+
     }
 
     override fun onResume() {
         super.onResume()
 
     }
+
+
+
+
+    private fun showDialog() {
+        //debug
+        Toast.makeText(applicationContext, "セーブボタン押されたぞ", Toast.LENGTH_LONG).show()
+        val dialog=Dialog(this)
+        dialog.setContentView(R.layout.custom_dialog)
+        //入力されたタイトル
+        val titleEditText = dialog.findViewById<View>(R.id.titleEditText) as EditText
+        /* 入力された内容 */
+        val contentsEditText = dialog.findViewById<View>(R.id.contentsEditText) as EditText
+        /* 戻るボタン */
+        val closeDialogButton = dialog.findViewById<View>(R.id.closeButton) as Button
+        closeDialogButton.setOnClickListener { dialog.cancel() }
+        //保存ボタン（重要）
+        val saveMemoryButton = dialog.findViewById<View>(R.id.saveButton) as Button
+        saveMemoryButton.setOnClickListener {
+            //不正な入力チェック
+            if (Check.canDataIn(titleEditText.text.toString(), contentsEditText.text.toString())) {
+                //TODO DBに挿入
+            } else {
+                Toast.makeText(this, "値が不正です。入力しなおしてください。", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+        dialog.show()
+    }
+
+
 
     private fun  checkPermission():Boolean {
         if (ActivityCompat.checkSelfPermission(
@@ -90,9 +124,6 @@ class MainActivity : AppCompatActivity()
         googleMap.setOnMyLocationButtonClickListener(this)
         //見ている場所から現在地に戻るボタン（右上の）がタップされたときのリスナ（onMyLocationButtonClickがよびだされる）
         googleMap.setOnMyLocationClickListener(this)
-
-
-
 
         //TODO DBから読み込み、データ数だけループしたい。
         googleMap.addMarker(
