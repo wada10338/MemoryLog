@@ -3,4 +3,5 @@
     <string name="No_Permission">permission許可してくれ。</string>
     <string name="MemoryList">一覧</string>
     <string name="Save">保存</string>
+    <string name="back">戻る</string>
 </resources>
