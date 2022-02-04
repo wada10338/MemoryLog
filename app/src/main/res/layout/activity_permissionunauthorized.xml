@@ -7,10 +7,10 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:layout_width="412dp"
         android:layout_height="0dp"
-        android:layout_marginTop="296dp"
-        android:layout_marginBottom="395dp"
+        android:layout_marginTop="211dp"
+        android:layout_marginBottom="331dp"
         android:text="@string/No_Permission"
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"
