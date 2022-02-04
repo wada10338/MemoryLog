@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -12,8 +13,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
 import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener
@@ -23,6 +26,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import kotlinx.coroutines.*
+import java.util.*
+import java.util.jar.Manifest
 
 
 class MainActivity : AppCompatActivity()
@@ -30,17 +35,17 @@ class MainActivity : AppCompatActivity()
     ,GoogleMap.OnPoiClickListener
     ,OnMyLocationButtonClickListener
     ,OnMyLocationClickListener
-    , LocationListener {
+    ,LocationListener {
     private var Check = CheckData()
     private lateinit var db:MemoryDatabase
     private lateinit var dao:MemoryDao
 
 
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         //DBの実装
         this.db = Room.databaseBuilder(
             applicationContext,
@@ -130,6 +135,7 @@ class MainActivity : AppCompatActivity()
 
 
 
+
     /**
      * Mapが使用可能になった場合に呼び出されるクラス
      */
@@ -143,6 +149,7 @@ class MainActivity : AppCompatActivity()
         googleMap.uiSettings.isCompassEnabled = true
         googleMap.isMyLocationEnabled = true
         googleMap.uiSettings.isMyLocationButtonEnabled=true
+       // googleMap.moveCamera(CameraUpdateFactory.newLatLng(緯度　経度))
 
         //お店がクリックされた時のリスナー（onPoiClickが呼び出される）
         googleMap.setOnPoiClickListener(this)
