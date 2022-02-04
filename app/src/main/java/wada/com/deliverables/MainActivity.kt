@@ -78,17 +78,12 @@ class MainActivity : AppCompatActivity()
         googleMap.uiSettings.isCompassEnabled = true
         googleMap.isMyLocationEnabled = true
         googleMap.uiSettings.isMyLocationButtonEnabled=true
-
         //お店がクリックされた時のリスナー（onPoiClickが呼び出される）
         googleMap.setOnPoiClickListener(this)
         //現在地をタップした時のリスナ（onMyLocationClickが呼びだされる）
         googleMap.setOnMyLocationButtonClickListener(this)
         //見ている場所から現在地に戻るボタン（右上の）がタップされたときのリスナ（onMyLocationButtonClickがよびだされる）
         googleMap.setOnMyLocationClickListener(this)
-
-
-
-
         //TODO DBから読み込み、データ数だけループしたい。
         googleMap.addMarker(
             MarkerOptions()
