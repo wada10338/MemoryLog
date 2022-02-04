@@ -3,4 +3,10 @@
     <string name="No_Permission">permission許可してくれ。</string>
     <string name="MemoryList">一覧</string>
     <string name="Save">保存</string>
+    <string name="back">戻る</string>
+    <string name="dialog_title">思い出を保存する</string>
+    <string name="title">タイトル</string>
+    <string name="Contents">内容</string>
+    <string name="close">閉じる</string>
+    <string name="save">保存</string>
 </resources>
