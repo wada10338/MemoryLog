@@ -29,5 +29,5 @@ public class CheckData {
         }
         return true
     }
-    //うお～
+    //Dao追加できたかな？？
 }

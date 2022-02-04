@@ -12,3 +12,4 @@ interface MemoryDao {
     @Query("select * from memory")
     fun getAll():LiveData<List<Memory>>
 }
+//テスト
