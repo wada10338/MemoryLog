@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity()
     private lateinit var locCallback: LocationCallback
     private lateinit var locReq:LocationRequest
     private lateinit var gMap:GoogleMap
+    private lateinit var nowLocation:LatLng
 
 
 
@@ -111,6 +112,8 @@ class MainActivity : AppCompatActivity()
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
                 val loc = locationResult.lastLocation
+                nowLocation= LatLng(loc.latitude,loc.longitude)
+
                 gMap.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(loc.latitude,loc.longitude),16f
@@ -203,8 +206,8 @@ class MainActivity : AppCompatActivity()
                             id=0
                             ,titleEditText.text.toString()
                             , contentsEditText.text.toString()
-                            ,35.326
-                            , 37.5643
+                            ,nowLocation.latitude
+                            ,nowLocation.longitude
                             ,sdf.format(Date())
                         )
                         dao.insert(memory)
