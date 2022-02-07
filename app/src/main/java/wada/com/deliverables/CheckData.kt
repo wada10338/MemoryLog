@@ -28,6 +28,14 @@ public class CheckData {
             return false
         }
         return true
+
+
+
+
+
+
     }
+
+
     //Dao追加できたかな？？
 }

@@ -1,21 +1,23 @@
 package wada.com.deliverables
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
-import android.location.Geocoder
+import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Bundle
+import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.room.Room
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
@@ -26,8 +28,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import kotlinx.coroutines.*
+import java.text.SimpleDateFormat
 import java.util.*
-import java.util.jar.Manifest
 
 
 class MainActivity : AppCompatActivity()
@@ -39,6 +41,16 @@ class MainActivity : AppCompatActivity()
     private var Check = CheckData()
     private lateinit var db:MemoryDatabase
     private lateinit var dao:MemoryDao
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 1234
+    }
+    private lateinit var fusedClient: FusedLocationProviderClient
+    private lateinit var setClient: SettingsClient
+    private lateinit var locSetReq: LocationSettingsRequest
+    private lateinit var locCallback: LocationCallback
+    private lateinit var locReq:LocationRequest
+    private lateinit var gMap:GoogleMap
+
 
 
 
@@ -56,18 +68,22 @@ class MainActivity : AppCompatActivity()
 
         //位置情報が許可されていない場合は許可願いの画面。
         if(Check.isLocationAvailable(applicationContext)) {
-            setContentView(R.layout.activity_main)
-            val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map_fragment) as SupportMapFragment
-            mapFragment.getMapAsync(this)
-
+            start()
         }else{
             setContentView(R.layout.activity_permissionunauthorized)
+            requestPermission()
+            if(Check.isLocationAvailable(applicationContext)){
+                start()
+            }
+
         }
 
     }
-    override fun onStart() {
-        super.onStart()
+    fun start(){
+        setContentView(R.layout.activity_main)
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map_fragment) as SupportMapFragment
+        mapFragment.getMapAsync(this)
         //ListActivityへの移行ボタン
         val listAc=findViewById<Button>(R.id.MemoryListButton)
         val intent=Intent(this,ListActivity::class.java)
@@ -76,11 +92,83 @@ class MainActivity : AppCompatActivity()
         val saveButton=findViewById<Button>(R.id.MemorySaveButton)
         saveButton.setOnClickListener { showDialog() }
 
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        fusedClient = LocationServices.getFusedLocationProviderClient(this)
+        setClient=LocationServices.getSettingsClient(this)
+
+        //  位置情報取得時の処理の準備
+        locCallback= object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                super.onLocationResult(locationResult)
+                val loc = locationResult.lastLocation
+                gMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(loc.latitude,loc.longitude),16f
+                    )
+                )
+
+            }
+        }
+
+        //位置リクエストの生成
+        locReq=LocationRequest.create().apply {
+            interval=5000
+            fastestInterval=1000
+            priority=LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        }
+
+        //位置情報に関する設定リクエスト情報を生成
+        val builder=LocationSettingsRequest.Builder()
+        locSetReq=builder.addLocationRequest(locReq).build()
+
+        //  位置情報の監視
+        startWatchLocation()
+    }
+
+    private fun startWatchLocation() {
+        //位置情報の設定の確認
+        setClient.checkLocationSettings(locSetReq)
+            .addOnSuccessListener(this)
+                succ@{
+                    //permission確認　なぜ何度も書かなあかんのや...
+                    if(ActivityCompat.checkSelfPermission(
+                            this,Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+                        return@succ
+                    }
+                    //位置情報の取得開始
+                    fusedClient.requestLocationUpdates(
+                        locReq,locCallback, Looper.getMainLooper()
+                    )
+                }
+            .addOnFailureListener(
+                this
+            ){e ->Log.d("MapMyLocation",e.message!!)}
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        fusedClient.removeLocationUpdates(locCallback)
     }
 
     override fun onResume() {
         super.onResume()
-
+        startWatchLocation()
     }
 
 
@@ -92,6 +180,7 @@ class MainActivity : AppCompatActivity()
     @OptIn(DelicateCoroutinesApi::class)
     private fun showDialog() {
         //debug
+        val sdf = SimpleDateFormat("yyyy年MM月dd日　HH:mm", Locale.JAPANESE)
         Toast.makeText(applicationContext, "セーブボタン押されたぞ", Toast.LENGTH_LONG).show()
         val dialog=Dialog(this)
         dialog.setContentView(R.layout.custom_dialog)
@@ -116,8 +205,10 @@ class MainActivity : AppCompatActivity()
                             , contentsEditText.text.toString()
                             ,35.326
                             , 37.5643
-                            ,"2月４日")
+                            ,sdf.format(Date())
+                        )
                         dao.insert(memory)
+                        Log.d("insertDBbLog",memory.toString())
                     }
                     withContext(Dispatchers.Main){
                         Toast.makeText(applicationContext,"正常！",Toast.LENGTH_LONG).show()
@@ -136,11 +227,13 @@ class MainActivity : AppCompatActivity()
 
 
 
+
     /**
      * Mapが使用可能になった場合に呼び出されるクラス
      */
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
+        gMap=googleMap
         //MAPの初期設定
         googleMap.uiSettings.isZoomGesturesEnabled = true
         googleMap.uiSettings.isScrollGesturesEnabled = true
@@ -201,6 +294,45 @@ class MainActivity : AppCompatActivity()
     override fun onLocationChanged(p0: Location) {
         TODO("Not yet implemented")
     }
+
+
+
+    private fun requestPermission() {
+        val permissionAccessCoarseLocationApproved =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
+
+        if (permissionAccessCoarseLocationApproved) {
+            val backgroundLocationPermissionApproved = ActivityCompat
+                .checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
+
+            if (backgroundLocationPermissionApproved) {
+                // フォアグラウンドとバックグランドのバーミッションがある
+            } else {
+                // フォアグラウンドのみOKなので、バックグラウンドの許可を求める
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    PERMISSION_REQUEST_CODE
+                )
+            }
+        } else {
+            // 位置情報の権限が無いため、許可を求める
+            ActivityCompat.requestPermissions(this,
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ),
+                PERMISSION_REQUEST_CODE
+            )
+        }
+
+    }
+
+
 
 
 }

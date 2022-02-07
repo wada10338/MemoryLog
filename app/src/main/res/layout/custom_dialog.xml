@@ -71,14 +71,16 @@
             android:text="@string/close"
             android:textSize="15sp"
             style="?android:attr/buttonBarButtonStyle" />
+
         <Button
             android:id="@+id/saveButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
+            android:onClick="saveMemorybtnClick"
             android:text="@string/save"
-            android:textSize="15sp"
-            style="?android:attr/buttonBarButtonStyle" />
+            android:textSize="15sp" />
 
 
 
