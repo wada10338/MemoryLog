@@ -16,7 +16,6 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.room.Room
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -28,6 +27,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import kotlinx.coroutines.*
+import wada.com.deliverables.DB.Memory
+import wada.com.deliverables.DB.MemoryDao
+import wada.com.deliverables.DB.MemoryDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,8 +41,8 @@ class MainActivity : AppCompatActivity()
     ,OnMyLocationClickListener
     ,LocationListener {
     private var Check = CheckData()
-    private lateinit var db:MemoryDatabase
-    private lateinit var dao:MemoryDao
+    private lateinit var db: MemoryDatabase
+    private lateinit var dao: MemoryDao
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1234
     }
@@ -57,14 +59,8 @@ class MainActivity : AppCompatActivity()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
         //DBの実装
-        this.db = Room.databaseBuilder(
-            applicationContext,
-            MemoryDatabase::class.java,
-            "Memory.db"
-        ).build()
+        this.db = MemoryDatabase.getMemoryDatabase(applicationContext)!!
         this.dao=this.db.MemoryDao()
 
         //位置情報が許可されていない場合は許可願いの画面。
@@ -92,7 +88,7 @@ class MainActivity : AppCompatActivity()
         //保存ボタン（ダイアログ表示ボタン）
         val saveButton=findViewById<Button>(R.id.MemorySaveButton)
         saveButton.setOnClickListener { showDialog() }
-
+        //TODO permission許可願いをまた出さなきゃエラー出るのはなんでだろう？
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -199,19 +195,19 @@ class MainActivity : AppCompatActivity()
         saveMemoryButton.setOnClickListener {
             //不正な入力チェック
             if (Check.canDataIn(titleEditText.text.toString(), contentsEditText.text.toString())) {
-                //TODO DB挿入　
+                //非同期処理でDB挿入
                 GlobalScope.launch {
                     withContext(Dispatchers.IO){
-                        val memory=Memory(
+                        val entity= Memory(
                             id=0
                             ,titleEditText.text.toString()
-                            , contentsEditText.text.toString()
+                            ,contentsEditText.text.toString()
                             ,nowLocation.latitude
                             ,nowLocation.longitude
                             ,sdf.format(Date())
                         )
-                        dao.insert(memory)
-                        Log.d("insertDBbLog",memory.toString())
+                        dao.insertMemory(entity)
+                        Log.d("insertDBbLog",entity.toString())
                     }
                     withContext(Dispatchers.Main){
                         Toast.makeText(applicationContext,"正常！",Toast.LENGTH_LONG).show()
@@ -226,6 +222,7 @@ class MainActivity : AppCompatActivity()
 
         dialog.show()
     }
+
 
 
 
@@ -297,6 +294,7 @@ class MainActivity : AppCompatActivity()
     override fun onLocationChanged(p0: Location) {
         TODO("Not yet implemented")
     }
+
 
 
 

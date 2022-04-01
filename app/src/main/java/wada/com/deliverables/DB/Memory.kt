@@ -1,4 +1,4 @@
-package wada.com.deliverables
+package wada.com.deliverables.DB
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
