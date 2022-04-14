@@ -30,6 +30,7 @@ import kotlinx.coroutines.*
 import wada.com.deliverables.DB.Memory
 import wada.com.deliverables.DB.MemoryDao
 import wada.com.deliverables.DB.MemoryDatabase
+import wada.com.deliverables.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
 import java.util.*
 

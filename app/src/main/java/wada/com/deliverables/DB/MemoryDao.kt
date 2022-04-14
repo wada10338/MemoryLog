@@ -9,17 +9,17 @@ import kotlinx.coroutines.flow.Flow
 interface MemoryDao {
     //データの挿入
     @Insert
-    fun insertMemory(memory:Memory)
+    fun insertMemory(memory:Memory?)
 
     //取得
-    @Query("select * from memory")
-    fun getAllMemoriesInfo():List<Memory>
+    @Query("SELECT * FROM memory")
+    fun getAllMemoriesInfo():List<Memory>?
     //削除
     @Delete
-    fun deleteMemory(memory:Memory)
+    fun deleteMemory(memory:Memory?)
     //アップデート
     @Update
-    fun updateMemory(memory:Memory)
+    fun updateMemory(memory:Memory?)
 
     @Query("SELECT * FROM memory ORDER BY id ASC")
     fun getAlphabetizedMemories():Flow<List<Memory>>
