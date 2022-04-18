@@ -27,10 +27,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import kotlinx.coroutines.*
-import wada.com.deliverables.DB.Memory
-import wada.com.deliverables.DB.MemoryDao
-import wada.com.deliverables.DB.MemoryDatabase
-import wada.com.deliverables.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,8 +38,6 @@ class MainActivity : AppCompatActivity()
     ,OnMyLocationClickListener
     ,LocationListener {
     private var Check = CheckData()
-    private lateinit var db: MemoryDatabase
-    private lateinit var dao: MemoryDao
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1234
     }
@@ -56,13 +50,8 @@ class MainActivity : AppCompatActivity()
     private lateinit var nowLocation:LatLng
 
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //DBの実装
-        this.db = MemoryDatabase.getMemoryDatabase(applicationContext)!!
-        this.dao=this.db.MemoryDao()
 
         //位置情報が許可されていない場合は許可願いの画面。
         if(Check.isLocationAvailable(applicationContext)) {
@@ -199,16 +188,7 @@ class MainActivity : AppCompatActivity()
                 //非同期処理でDB挿入
                 GlobalScope.launch {
                     withContext(Dispatchers.IO){
-                        val entity= Memory(
-                            id=0
-                            ,titleEditText.text.toString()
-                            ,contentsEditText.text.toString()
-                            ,nowLocation.latitude
-                            ,nowLocation.longitude
-                            ,sdf.format(Date())
-                        )
-                        dao.insertMemory(entity)
-                        Log.d("insertDBbLog",entity.toString())
+                        //非同期処理はここにかけ
                     }
                     withContext(Dispatchers.Main){
                         Toast.makeText(applicationContext,"正常！",Toast.LENGTH_LONG).show()
@@ -223,9 +203,6 @@ class MainActivity : AppCompatActivity()
 
         dialog.show()
     }
-
-
-
 
 
 
